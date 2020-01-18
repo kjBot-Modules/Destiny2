@@ -45,7 +45,7 @@ class Manifest{
     public function needUpdate(): bool{
         $lastManifest = DataStorage::GetData('Destiny2.Manifest/LastManifest.json');
         if(false === $lastManifest)return true; //没有上次获取的清单的情况下需要获取新的数据库
-        if(false === DataStorage::GetData('Destiny2.Manifest/Manifest.json'))return true; //没有数据库的情况下需要获取新的数据库
+        if(false === DataStorage::GetData('Destiny2.Manifest/Manifest.'.$this->locale.'.json'))return true; //没有数据库的情况下需要获取新的数据库
 
         $lastManifestObj = json_decode($lastManifest)->Response;
 
@@ -84,7 +84,7 @@ class Manifest{
      */
     protected function fetchAggregateManifest($cache = false){
         if($cache){
-            $aggregateManifest = DataStorage::GetData('Destiny2.Manifest/Manifest.json');
+            $aggregateManifest = DataStorage::GetData('Destiny2.Manifest/Manifest.'.$this->locale.'.json');
         }else{
             $aggregateManifest = file_get_contents(
                 $this->baseHost.((array)$this->manifestJSONobj->jsonWorldContentPaths)[$this->locale]
@@ -115,7 +115,7 @@ class Manifest{
         }else{
             //如果需要更新，从棒鸡取得最新数据库并保存
             $this->fetchAggregateManifest();
-            DataStorage::SetData('Destiny2.Manifest/Manifest.json', $this->aggregateManifest);
+            DataStorage::SetData('Destiny2.Manifest/Manifest.'.$this->locale.'.json', $this->aggregateManifest);
         }
         DataStorage::SetData('Destiny2.Manifest/LastManifest.json', $this->manifestJSON);
     }
