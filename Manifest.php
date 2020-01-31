@@ -13,9 +13,9 @@ class Manifest{
 
     protected $baseHost = 'https://www.bungie.net';
     protected $host = 'https://www.bungie.net/Platform';
-    protected $locale = 'en';
+    protected $locale = 'zh-chs';
 
-    public function __construct($apikey, $locale = 'en'){
+    public function __construct($apikey, $locale = 'zh-chs'){
         $this->apikey = $apikey;
         $this->locale = $locale;
     }

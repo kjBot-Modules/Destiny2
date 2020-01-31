@@ -10,7 +10,7 @@ use kjBotModule\kj415j45\CoreModule\AccessLevel;
 class Find extends Module{
     public function process(array $args, MessageEvent $event){
         (new AccessControl($event))->requireLevel(AccessLevel::Supporter);
-        $manifest = new Manifest(Config('bungieAPIkey'), 'zh-chs');
+        $manifest = new Manifest(Config('bungieAPIkey'));
         try{
             $manifest->getLatestManifest();
         }catch(Exception $e){
