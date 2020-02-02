@@ -300,8 +300,8 @@ class Weekly extends Module{
 
     private function getRaid($image = false){
         $raid = '';
-        $raid.= trim($this->getLewiathan($image));
-        $raid.= trim($this->getGardenOfSalvation($image));
+        $raid.= trim($this->getLewiathan($image))."\n";
+        $raid.= trim($this->getGardenOfSalvation($image))."\n";
         $raid.= trim($this->getClanRAID($image));
 
         return static::GenerateWeeklyFragment('RAID', [
