@@ -21,7 +21,7 @@ class Weekly extends Module{
     protected $nightmare; //梦魇狩猎
     protected $raid; //周RAID挑战
     protected $crucible; //熔炉竞技场轮转列表
-    protected $clanRaid; //TODO 公会RAID挑战
+    protected $clanRaid; //公会RAID挑战
     protected $dreamingCity; //TODO 梦城状态
     protected $menagerie; //动物园
     //protected $reckoning; //大清算
@@ -44,7 +44,7 @@ class Weekly extends Module{
     }
 
     private function doRealThings($forceUpdate = false){
-        if ($forceUpdate || !$this->needUpdate()) {
+        if(!$forceUpdate && !$this->needUpdate()) {
             return $this->readWeeklyFromSave();
         }
 
@@ -53,8 +53,7 @@ class Weekly extends Module{
 
         $weekly = '';
 
-        $weekly.= $this->getLewiathan();
-        $weekly.= $this->getGardenOfSalvation();
+        $weekly.= $this->getRaid();
         $weekly.= $this->getFlashpoint();
         
         $weekly.= $this->getActivities();
@@ -303,23 +302,115 @@ class Weekly extends Module{
         $raid = '';
         $raid.= $this->getLewiathan($image);
         $raid.= $this->getGardenOfSalvation($image);
+        $raid.= trim($this->getClanRAID($image));
 
         return static::GenerateWeeklyFragment('RAID', [
             $raid,
         ]);
     }
 
+    private function getRefreshedToken($refreshToken){
+        $bungieClientId = Config('bungieCID');
+        $bungieClientSecret = Config('bungieCS');
+        $web = file_get_contents('https://www.bungie.net/platform/app/oauth/token/', false, stream_context_create([
+            'http' => [
+                'method' => 'POST',
+                'header' => 'Content-Type: application/x-www-form-urlencoded',
+                'content' => "grant_type=refresh_token&client_id={$bungieClientId}&client_secret={$bungieClientSecret}&refresh_token={$refreshToken}",
+            ]
+        ]));
+        
+        if(false == $web){
+            throw new Exception('Can not refresh oauth token');
+        }
+
+        $json = json_decode($web, true);
+        if(null == $json){
+            throw new Exception('Something wrong with refresh token or bungie down');
+        }
+        return $json;
+    }
+
+    private function getHawthorneQuests(){
+        $quests = [];
+        $bungieOAuth = json_decode(DataStorage::GetData('Destiny2.Weekly/token.json'), true);
+        $bungieOAuth = $this->getRefreshedToken($bungieOAuth['refresh_token']);
+        DataStorage::SetData('Destiny2.Weekly/token.json', json_encode($bungieOAuth));
+        $apikey = Config('bungieAPIkey');
+
+        $web = file_get_contents('https://www.bungie.net/Platform/Destiny2/3/Profile/4611686018489331546/Character/2305843009507084169/Vendors/3347378076/?components=VendorSales', false, stream_context_create([
+            'http' => [
+                'header' => "X-API-Key: {$apikey}\nAuthorization: {$bungieOAuth['token_type']} {$bungieOAuth['access_token']}",
+            ]
+        ]));
+
+        if(false === $web){
+            throw new Exception('Can not fetch clan raid challenge');
+        }
+        $json = json_decode($web, true);
+        if(null == $json){
+            throw new Exception('Something wrong with token or bungie down');
+        }
+
+        $datas = $json['Response']['sales']['data'];
+
+        return $datas;
+    }
+
     private function getClanRAID($image = false){
         $clanRaid = '';
 
-        $bungieOAuth = json_decode(DataStorage::GetData('Destiny2.Weekly/token.json'));
+        $challenges = $this->getHawthorneQuests();
 
-        
+        foreach($challenges as $challenge){
+            if($challenge['costs'][0]['itemHash'] == 3159615086 && $challenge['costs'][0]['quantity'] == 1000){ //FIXME 这个取法可能存在风险
+                switch($challenge['itemHash']){
+                    //sotp
+                    case 1348944144:
+                        $quests[]= '【往日之苦】死守防线：伯特扎市阶段（老一）地图倒计时不能低于一半';
+                    break;
+                    case 3415614992:
+                        $quests[]= '【往日之苦】姐妹齐心：获取保险库权限阶段（老三）每个人都要取得一次不同的相位辐射';
+                    break;
+                    case 1381881897:
+                        $quests[]= '【往日之苦】各有所好：暴动首领阶段（老四）每个人只能打破一个弱点';
+                    break;
+                    //cos
+                    case 2459033425:
+                        $quests[]= '【忧愁王冠】有限祝福：邪魔族仪式阶段（老一）同时不能有超过两名守护者拥有女巫的祝福';
+                    break;
+                    case 2459033426:
+                        $quests[]= '【忧愁王冠】大获全胜：消灭幻影阶段（老三）击杀幻影的那轮输出阶段击破护盾五次';
+                    break;
+                    case 2459033427:
+                        $quests[]= '【忧愁王冠】全力以赴：消灭加尔兰阶段（老四）输出阶段每个人只能参与打一次手';
+                    break;
+                    //lw
+                    case 2836954349:
+                        $quests[]= '【最后一愿】召唤仪式：击败卡莉阶段（老一）占满⑨个台子，杀死⑨个骑士，并在输出卡莉之前消灭全部虫瘤';
+                    break;
+                    case 1250327262:
+                        $quests[]= '【最后一愿】哪位女巫：击败秋露·知阶段（老二）不能被Boss攻击命中';
+                    break;
+                    case 3871581136:
+                        $quests[]= '【最后一愿】永恒战斗：击败摩格斯阶段（老三）不能打死小虫瘤';
+                    break;
+                    case 1568895666:
+                        $quests[]= '【最后一愿】请勿入内：保险库阶段（老四）不能让骑士进入中央大厅';
+                    break;
+                    case 4007940282:
+                        $quests[]= '【最后一愿】记忆的力量：击败魅痕阶段（老五）不能打同一个眼睛两次';
+                    break;
+                }
+            }else{
+                continue;
+            }
+        }
 
         
         if(!$image){
             return static::GenerateWeeklyFragment('公会挑战', [
-                $clanRaid,
+                implode("\n", $quests),
             ]);
         }else{
             //TODO
@@ -336,7 +427,7 @@ class Weekly extends Module{
                     $challenges[]= '【剩余物】避开崇圣首脑阶段（老一）Boss所在区域召唤的炮台不能打，在前三个区域共六个';
                     break;
                 case 405180260:
-                    $challenges[]= '【枷锁的一环】召唤崇圣首脑阶段（老二）每次连线必须六人都参与，可以不在同一个继电器处';
+                    $challenges[]= '【枷锁的一环】召唤崇圣首脑阶段（老二）六人必须同时刷新启蒙Buff，可以不在同一个继电器处';
                     break;
                 case 2472478405:
                     $challenges[]= '【登顶】消灭崇圣首脑阶段（老三）每次存入荧光必须是十个';
@@ -419,7 +510,7 @@ class Weekly extends Module{
         foreach($lewiathan['activities'][0]['modifierHashes'] as $challenge){
             switch($challenge){
                 case 2863316929:
-                    $challenges[]= '【铁拳厅挑战】不能做重复工作';
+                    $challenges[]= '【铁拳厅挑战】不能站同一个台子两次';
                     break;
                 case 3296085675:
                     $challenges[]= '【皇家水池挑战】必须有一位玩家全程站在中央水池中';
