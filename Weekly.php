@@ -553,7 +553,7 @@ class Weekly extends Module{
         $refreshTime = new DateTime('Wednesday 01:00:00', new DateTimeZone('Asia/Shanghai'));
 
         if( ( ($expireTime->format('W') < $now->format('W')) || ($now->format('W') == 1) ) //不同周，或是本周是新年第一周
-         && ($now > $refreshTime) //且已经过了本周的刷新时间
+            || ($now > $refreshTime) //或已经过了本周的刷新时间
         )return true;
         else return false;
     }

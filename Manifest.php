@@ -105,7 +105,7 @@ class Manifest{
     /**
      * 必须最先调用
      *
-     * @return void
+     * @return $this
      */
     public function getLatestManifest(){
         $this->fetchLatestManifest(); //获取最新清单
@@ -118,6 +118,7 @@ class Manifest{
             DataStorage::SetData('Destiny2.Manifest/Manifest.'.$this->locale.'.json', $this->aggregateManifest);
         }
         DataStorage::SetData('Destiny2.Manifest/LastManifest.json', $this->manifestJSON);
+        return $this;
     }
 
     public function getManifest(){
