@@ -77,8 +77,22 @@ class Weekly extends Module{
         $crucible = ''; //熔炉竞技场轮转列表
         $strike = []; //日落严酷考验
         $nightfalls = []; //老日落
-        $championsModifiers = [605585258, 882588556, 1930311099, 2687456355, 2834348323, 3605663348, 3933343183];
-        $championsType = [605585258, 882588556, 3933343183];
+        $championsModifiers = [
+            2834348323, //暴徒（额外勇士）
+        ];
+        $championsType = [
+            605585258, //屏障
+            882588556, //过载
+            3933343183, //势不可挡
+            2078602635, //全部
+        ];
+        $championsRace = [
+            1930311099, //Vex 屏障、超载
+            2687456355, //卡巴尔 屏障、势不可挡
+            3605663348, //邪魔族 屏障、势不可挡
+            2055950944, //堕落者 屏障、超载
+        ];
+        $championsModifiers = array_merge($championsModifiers, $championsType, $championsRace);
 
         $activitiesList = $this->getActivitiesList();
 
@@ -105,7 +119,7 @@ class Weekly extends Module{
                 continue;
             }
     
-            if($activityInfo['displayProperties']['name'] === '日落：严酷考验: 大师'){ //匹配日落严酷考验
+            if($activityInfo['displayProperties']['name'] === '日落：严酷考验: 大师'){ //匹配日落严酷考验（暂不考虑宗师难度，因为修改器固定）
                 $strike = [
                     'info' => $activityInfo,
                     'inList' => $activity,
@@ -133,7 +147,7 @@ class Weekly extends Module{
                     case 740891329:  //生存：自由竞技
                     case 914148167:  //混战
                         continue; //排除掉六个核心列表和私人比赛
-                    default: //剩余的都是轮转列表（包括铁旗）
+                    default: //剩余的都是轮转列表（包括铁旗）（奥西里斯试炼在周六开放，因此不会被包含在周报中）
                         $crucible .= $activityInfo['displayProperties']['name'].' ';
                 }
             }
@@ -165,13 +179,13 @@ class Weekly extends Module{
 
         //梦魇狩猎相关开始
         $nightmareCommonModifier = "[公共修改器]";
-        $nightmareCommonModifiers = array_diff( //排除掉勇士类修改器
+        $nightmareCommonModifiers = array_diff( //排除掉勇士类型
             array_intersect( //三个梦魇的共同修改器
                 $nightmares[0]['inList']['modifierHashes'], 
                 $nightmares[1]['inList']['modifierHashes'], 
                 $nightmares[2]['inList']['modifierHashes']
             ),
-            $championsModifiers, [2821775453] //排除掉“大师难度修改器”
+            $championsType, [2821775453, 2834348323] //排除掉“大师难度修改器”和“勇士：暴徒”
         );
         foreach($nightmareCommonModifiers as $modifier){
             $nightmareCommonModifier.= ' '.$this->manifest->findID($modifier)['DestinyActivityModifierDefinition']['displayProperties']['name'];
