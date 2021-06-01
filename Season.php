@@ -8,7 +8,7 @@ use kjBot\SDK\CQCode;
 class Season extends Module{
     public function process(array $args, MessageEvent $event){
         return $event->sendBack(
-            CQCode::Image('https://www.bungie.net/pubassets/pkgs/150/150642/CH.jpg', 0)
+            CQCode::Image('https://www.bungie.net/pubassets/pkgs/151/151468/S14_Calendar_ZH-CN.jpg', 0)
         );
     }
 }
